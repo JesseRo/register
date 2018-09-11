@@ -1,9 +1,11 @@
+import sys
+from PyQt5.QtWebEngineCore import QWebEngineUrlRequestInterceptor, QWebEngineUrlRequestInfo
+
 from PyQt5.QtWidgets import QApplication
-from PyQt5.QtWebEngineWidgets import QWebEngineView
+from PyQt5.QtWebEngineWidgets import QWebEngineView, QWebEngineProfile, QWebEnginePage
 from PyQt5.QtCore import QUrl
 
 
-page = None
 def on_done():
     print(page.url())
     with open('ddd.js') as f:
@@ -12,19 +14,27 @@ def on_done():
         page.runJavaScript(js)
 
 
-app = QApplication([])
+class TwitchInterceptor(QWebEngineUrlRequestInterceptor):
+    def interceptRequest(self, ri):
+        if 'https://passport.twitch.tv/register' in str(ri.requestUrl()):
+            pass
+
+
+app = QApplication(sys.argv)
 view = QWebEngineView()
-page = view.page()
-view.page().profile().clearHttpCache()
-view.page().profile().clearAllVisitedLinks()
-pCookie = view.page().profile().cookieStore()
-pCookie.deleteAllCookies()
-pCookie.deleteSessionCookies()
 
-view.load(QUrl("http://www.twitch.tv/directory"))
-# view.load(QUrl("http://baidu.com"))
+interceptor = TwitchInterceptor()
+profile = QWebEngineProfile()
+# profile.clearHttpCache()
+# profile.clearAllVisitedLinks()
+# pCookie = profile.cookieStore()
+# pCookie.deleteAllCookies()
+# pCookie.deleteSessionCookies()
+profile.setRequestInterceptor(interceptor)
+
+page = QWebEnginePage(profile, view)
+page.loadFinished.connect(on_done)
+view.setPage(page)
+page.setUrl(QUrl("http://www.twitch.tv/directory"))
 view.show()
-page.setDevToolsPage(view.page())
-
-view.loadFinished.connect(on_done)
-app.exec_()
+sys.exit(app.exec_())
