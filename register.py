@@ -40,6 +40,11 @@ def on_done():
     page.runJavaScript(js)
 
 
+def check_and_post(id):
+    captcha_response_payload.update({'id': id})
+    r = requests.get(captcha_response_url, captcha_response_payload)
+
+
 class TwitchInterceptor(QWebEngineUrlRequestInterceptor):
     def interceptRequest(self, ri):
         url = str(ri.requestUrl())
@@ -49,9 +54,10 @@ class TwitchInterceptor(QWebEngineUrlRequestInterceptor):
             for param in params:
                 if param.startswith('k='):
                     key = param[2:]
-                    r = requests.get(captcha_request_url, captcha_request_payload.update({'googlekey': key}))
+                    captcha_request_payload.update({'googlekey': key})
+                    r = requests.get(captcha_request_url, captcha_request_payload)
                     request_id = r.json().get('request')
-                    t = threading.Timer(5, )
+                    t = threading.Timer(5, check_and_post, request_id)
                     t.start()
 
 
