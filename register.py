@@ -4,20 +4,55 @@ from PyQt5.QtWebEngineCore import QWebEngineUrlRequestInterceptor, QWebEngineUrl
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtWebEngineWidgets import QWebEngineView, QWebEngineProfile, QWebEnginePage
 from PyQt5.QtCore import QUrl
+from urllib.parse import urlparse
+import requests
+import threading
+
+
+init_url = 'https://www.twitch.tv/directory'
+captcha_request_payload = {
+    'key': 'aeb9f9d48d5f07f50f8711cd825a57b8',
+    'method': 'userrecaptcha',
+    'pageurl': init_url,
+    'googlekey': None,
+    'json': 1
+}
+captcha_response_payload = {
+    'key': 'aeb9f9d48d5f07f50f8711cd825a57b8',
+    'action': 'get',
+    'id': None,
+    'json': 1
+}
+captcha_request_url = 'http://2captcha.com/in.php'
+captcha_response_url = 'http://2captcha.com/res.php'
+
+
+def get_js(path):
+    with open(path) as f:
+        js = f.read()
+        print(js)
+        return js
 
 
 def on_done():
     print(page.url())
-    with open('ddd.js') as f:
-        js = f.read()
-        print(js)
-        page.runJavaScript(js)
+    js = get_js("ddd.js")
+    page.runJavaScript(js)
 
 
 class TwitchInterceptor(QWebEngineUrlRequestInterceptor):
     def interceptRequest(self, ri):
-        if 'https://passport.twitch.tv/register' in str(ri.requestUrl()):
-            pass
+        url = str(ri.requestUrl())
+        if 'https://recaptcha.net/recaptcha/api2/anchor' in str(ri.requestUrl()):
+            result = urlparse(url[url.index('https://'):])
+            params = result.query.split('&')
+            for param in params:
+                if param.startswith('k='):
+                    key = param[2:]
+                    r = requests.get(captcha_request_url, captcha_request_payload.update({'googlekey': key}))
+                    request_id = r.json().get('request')
+                    t = threading.Timer(5, )
+                    t.start()
 
 
 app = QApplication(sys.argv)
@@ -35,6 +70,6 @@ profile.setRequestInterceptor(interceptor)
 page = QWebEnginePage(profile, view)
 page.loadFinished.connect(on_done)
 view.setPage(page)
-page.setUrl(QUrl("http://www.twitch.tv/directory"))
+page.setUrl(QUrl(init_url))
 view.show()
 sys.exit(app.exec_())
