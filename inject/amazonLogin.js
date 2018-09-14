@@ -1,0 +1,1 @@
+$('#createAccountSubmit').click();

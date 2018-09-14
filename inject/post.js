@@ -1,7 +1,6 @@
 (function ajax_method(url,data,method,success) {
     var ajax = new XMLHttpRequest();
     if (method === 'get') {
-        // get请求
         if (data) {
             url+='?';
             url+=data;
@@ -24,10 +23,16 @@
             success(ajax.responseText);
         }
     }
-})('register', %s, 'post', function (res) {
+})('https://passport.twitch.tv/register', '${payload}', 'post', function (res) {
     alert(res);
     var payload = JSON.parse(res);
-    var cookie = document.cookie;
-    cookie += payload.access_token;
-    document.cookie = cookie;
+    (function(name, value) {
+        var liveMinutes = 60 * 2;
+        var minutes = liveMinutes * 60 * 1000;
+        var exp = new Date();
+        exp.setTime(exp.getTime() + minutes + 8 * 3600 * 1000);
+        document.cookie = name + "=" + value + ";path=/;domain=.twitch.tv;expires=" + exp.toUTCString();
+    })('auth-token', payload.access_token);
+
+    window.location.href = 'https://www.twitch.tv/';
 });
