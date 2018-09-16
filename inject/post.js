@@ -34,5 +34,5 @@
         document.cookie = name + "=" + value + ";path=/;domain=.twitch.tv;expires=" + exp.toUTCString();
     })('auth-token', payload.access_token);
 
-    window.location.href = 'https://www.twitch.tv/';
+    window.location.href = 'https://www.twitch.tv/directory';
 });

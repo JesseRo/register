@@ -4,4 +4,4 @@
     document.getElementById('pp-rO-43').value = card.month;
     document.getElementById('pp-rO-45').value = card.year;
     document.getElementsByClassName('a-button-input')[0].click();
-})();
+})(${card});

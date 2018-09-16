@@ -1,1 +1,1 @@
-$('#createAccountSubmit').click();
+document.getElementById('createAccountSubmit').click();
