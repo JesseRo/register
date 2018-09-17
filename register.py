@@ -150,18 +150,17 @@ card_bind_payload = {
 def get_js(path):
     with open(path) as f:
         js = f.read()
-        print(js)
         return js
 
 
 def on_done():
-    logger.info(str(page.url()))
+    print(str(page.url()))
     url = str(page.url())
     if twitch_url in url:
         js = get_js("inject/twitch.js")
         page.runJavaScript(js)
         page.profile().cookieStore().loadAllCookies()
-    elif amazon_url in url or amazon_url_signin in url:
+    elif amazon_url_signin in url:
         js = get_js('inject/amazonLogin.js')
         page.runJavaScript(js)
         page.profile().cookieStore().loadAllCookies()
@@ -174,7 +173,7 @@ def on_done():
         page.runJavaScript(js)
         page.profile().cookieStore().loadAllCookies()
     elif bind_url in url:
-        js = "document.querySelector('[value=\"Confirm\"]').click();"
+        js = """document.querySelector('[value="Confirm"]').click();"""
         page.runJavaScript(js)
         page.profile().cookieStore().loadAllCookies()
     elif card_url in url:
@@ -203,13 +202,13 @@ def on_captcha_resolved(key, captcha):
     js = get_js('inject/post.js')
     payload = post_payload.copy()
     payload['username'] = ng.get_user_name(True)
-    payload['client_id'] = 'kimne78kx3ncx6brgo4mv6wki5h1ko'
+    payload['client_id'] = 'pogofhumlor5rsdq403j17gs8a52iom'
     payload['captcha']['key'] = key
     payload['captcha']['value'] = captcha
     payload['email'] = ng.get_email(True)
     js = js.replace('${payload}', jsonEncoder.encode(payload))
     logger.debug("payload：%r" % payload)
-    logger.debug("js: %s" % js)
+    print("js: %s" % js)
     page.runJavaScript(js)
 
 
@@ -233,29 +232,31 @@ class TwitchInterceptor(QWebEngineUrlRequestInterceptor):
 
 app = QApplication(sys.argv)
 view = QWebEngineView()
-
-res = requests.get(proxy_provider_url)
-ip = res.text.split(":")
-port = ip[1]
-ip = ip[0]
-
-proxy = QtNetwork.QNetworkProxy()
-# Http访问代理
-proxy.setType(QtNetwork.QNetworkProxy.HttpProxy)
-# 代理ip地址HttpProxy
-proxy.setHostName(ip)
-# 端口号
-proxy.setPort(int(port))
-QtNetwork.QNetworkProxy.setApplicationProxy(proxy)
+#
+# res = requests.get(proxy_provider_url)
+# ip = res.text.split(":")
+# port = ip[1]
+# ip = ip[0]
+#
+# proxy = QtNetwork.QNetworkProxy()
+# # Http访问代理
+# proxy.setType(QtNetwork.QNetworkProxy.HttpProxy)
+# # 代理ip地址HttpProxy
+# proxy.setHostName(ip)
+# # 端口号
+# proxy.setPort(int(port))
+# QtNetwork.QNetworkProxy.setApplicationProxy(proxy)
 
 interceptor = TwitchInterceptor()
 profile = QWebEngineProfile()
-# profile.clearHttpCache()
-# profile.clearAllVisitedLinks()
-# pCookie = profile.cookieStore()
-# pCookie.deleteAllCookies()
-# pCookie.deleteSessionCookies()
+profile.clearHttpCache()
+profile.clearAllVisitedLinks()
+pCookie = profile.cookieStore()
+pCookie.deleteAllCookies()
+pCookie.deleteSessionCookies()
 profile.setRequestInterceptor(interceptor)
+
+profile.setPersistentCookiesPolicy(QWebEngineProfile.ForcePersistentCookies)
 
 page = QWebEnginePage(profile, view)
 page.loadFinished.connect(on_done)
