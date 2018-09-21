@@ -49,8 +49,9 @@ def on_done():
     for injector in injectors:
         if injector.diagnose(url):
             js = injector.inject()
-            page.runJavaScript(js)
-            page.profile().cookieStore().loadAllCookies()
+            if isinstance(js, str):
+                page.runJavaScript(js)
+                page.profile().cookieStore().loadAllCookies()
 
 
 def check_and_post(_id, key):
